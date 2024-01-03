@@ -1,38 +1,77 @@
 import extra
 import csp
 import time
+import sys
 
-if __name__ == '__main__':
-    #For each instance, read the data and run the backtracking search with FC and MAC
+###### FUNCTION ######
 
-    #2-f24#
-    print("\n2-f24\n")
-    data = extra.Parsing("2-f24.txt")
-    print("FC")
-    start = time.time()
-    # fc_result, constraint_checks, visited_nodes = csp.backtracking_search(data, select_unassigned_variable=csp.dom_wdeg, inference=csp.forward_checking)
-    fc_result = csp.backtracking_search(data, csp.mrv, csp.unordered_domain_values, csp.forward_checking)
-    end = time.time()
-    print(fc_result)
-    print("Time elapsed: %.5f" %(end-start), "seconds")
-    # print("Constaint checks:", constraint_checks)
-    # print("Visited nodes:", visited_nodes)
+# Check constraints between A and B variables
+def check_con(A, a, B, b):
+    if ((A,B) in constraints) and (constraints[(A,B)][1] == '='):
+        return (abs(a-b) == constraints[(A,B)][0])
+    
+    elif ((A,B) in constraints) and (constraints[(A,B)][1] == '>'):
+        return (abs(a-b) > constraints[(A,B)][0])
+    
+    elif ((B,A) in constraints) and (constraints[(B,A)][1] == '='):
+        return (abs(a-b) == constraints[(B,A)][0])
+    
+    elif ((B,A) in constraints) and (constraints[(B,A)][1] == '>'):
+        return (abs(a-b) > constraints[(B,A)][0])
+        
 
-    data = extra.Parsing("2-f24.txt")
-    print("\nMAC")
-    start = time.time()
-    # mac_result, constraint_checks, visited_nodes = csp.backtracking_search(data, select_unassigned_variable=csp.dom_wdeg, inference=csp.mac)
-    mac_result = csp.backtracking_search(data, csp.mrv, csp.unordered_domain_values, csp.mac)
-    end = time.time()
-    print(fc_result)
-    print("Time elapsed: %.5f" %(end-start), "seconds")
-    # print("Constaint checks:", constraint_checks)
-    # print("Visited nodes:", visited_nodes)
+####### MAIN ########
+    
+# Input argument that indicates instance file from ./rlfap
+instance = sys.argv[1]
 
-    data = extra.Parsing("2-f24.txt")
-    print("\nMin Conflicts")
-    start = time.time()
-    minConflicts_result = csp.min_conflicts(data)
-    end = time.time()
-    print(minConflicts_result)
-    print("Time elapsed: %.5f" % (end - start), "seconds")
+# Parsing
+variables, var_domain, domains, constraints, neighbors = extra.parsing(instance)
+
+### FC ###
+data = csp.CSP(variables, domains, neighbors, check_con, constraints)
+
+print("FC\n")
+start = time.time()
+fc_result, checks = csp.backtracking_search(data, select_unassigned_variable=csp.domwdeg, order_domain_values=csp.lcv, inference=csp.forward_checking)
+end = time.time()
+print(fc_result)
+print("\nTime elapsed: %.3f" %(end-start), "seconds")
+print("\nVisited nodes: %d" % data.nassigns)
+print("\nConstraint checks: %d" % checks)
+
+# ### MAC ###
+data = csp.CSP(variables, domains, neighbors, check_con, constraints)
+
+print("MAC\n")
+start = time.time()
+fc_result, checks = csp.backtracking_search(data, select_unassigned_variable=csp.domwdeg, order_domain_values=csp.lcv, inference=csp.mac)
+end = time.time()
+print(fc_result)
+print("\nTime elapsed: %.3f" %(end-start), "seconds")
+print("\nVisited nodes: %d" % data.nassigns)
+print("\nConstraint checks: %d" % checks)
+
+### FC-CBJ ###
+data = csp.CSP(variables, domains, neighbors, check_con, constraints)
+
+print("FC-CBJ\n")
+start = time.time()
+fc_result, checks = csp.cbj_search(data, select_unassigned_variable=csp.domwdeg, order_domain_values=csp.lcv, inference=csp.forward_checking)
+end = time.time()
+print(fc_result)
+print("\nTime elapsed: %.3f" %(end-start), "seconds")
+print("\nVisited nodes: %d" % data.nassigns)
+print("\nConstraint checks: %d" % checks)
+
+### MinConflicts ###
+data = csp.CSP(variables, domains, neighbors, check_con, constraints)
+
+print("MinConflicts\n")
+start = time.time()
+fc_result, checks = csp.min_conflicts(data)
+end = time.time()
+print(fc_result)
+print("\nTime elapsed: %.3f" %(end-start), "seconds")
+print("\nVisited nodes: %d " % data.nassigns)
+print("\nConstraint checks: %d" % checks)
